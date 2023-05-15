@@ -1,3 +1,5 @@
+#  Copyright (c) 2023. Andrii Malchyk, All rights reserved.
+
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from application import db

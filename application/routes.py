@@ -1,3 +1,5 @@
+#  Copyright (c) 2023. Andrii Malchyk, All rights reserved.
+
 from flask import render_template, request, Response, json, redirect, flash, url_for
 
 from application import app

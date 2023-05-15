@@ -1,3 +1,5 @@
+#  Copyright (c) 2023. Andrii Malchyk, All rights reserved.
+
 from flask import Flask
 from flask_mongoengine import MongoEngine
 
