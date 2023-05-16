@@ -73,17 +73,51 @@ def register():
 def enrollment():
     courseID = request.form.get('courseID')
     course_title = request.form.get('title')
-    user_id = 1
+    user_id = 2
     if courseID:
         if Enrollment.objects(user_id=user_id, courseID=courseID):
             flash(f"Oops! You are already registered in this course {course_title}!", "danger")
             return redirect(url_for("courses"))
         else:
-            Enrollment(user_id=user_id, courseID=courseID)
+            Enrollment(user_id=user_id, courseID=courseID).save()
             flash(f"You are enrolled in {course_title}!", "success")
 
-    classes = None
-    term = request.form.get('term')
+    classes = list(User.objects.aggregate(*[
+            {
+                    '$lookup': {
+                            'from': 'enrollment',
+                            'localField': 'id',
+                            'foreignField': 'user_id',
+                            'as': 'r1'
+                    }
+            }, {
+                    '$unwind': {
+                            'path': '$r1',
+                            'includeArrayIndex': 'r1_id',
+                            'preserveNullAndEmptyArrays': False
+                    }
+            }, {
+                    '$lookup': {
+                            'from': 'course',
+                            'localField': 'r1.courseID',
+                            'foreignField': 'courseID',
+                            'as': 'r2'
+                    }
+            }, {
+                    '$unwind': {
+                            'path': '$r2',
+                            'preserveNullAndEmptyArrays': False
+                    }
+            }, {
+                    '$match': {
+                            'id': user_id
+                    }
+            }, {
+                    '$sort': {
+                            'courseID': 1
+                    }
+            }
+    ]))
     return render_template("enrollment.html", enrollment=True, title="Enrollment", classes=classes)
 
 
