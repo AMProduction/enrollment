@@ -1,6 +1,6 @@
 #  Copyright (c) 2023. Andrii Malchyk, All rights reserved.
 
-from flask import render_template, request, Response, json, redirect, flash, url_for
+from flask import render_template, request, Response, json, redirect, flash, url_for, session
 
 from application import app
 from application.forms import LoginForm, RegisterForm
@@ -27,6 +27,8 @@ def index():
 
 @app.route("/login", methods=['GET', 'POST'])
 def login():
+    if session.get('user_name'):
+        return redirect(url_for('index'))
     form = LoginForm()
     if form.validate_on_submit():
         email = form.email.data
@@ -34,10 +36,19 @@ def login():
         user = User.objects(email=email).first()
         if user and user.get_password(password):
             flash(f"{user.first_name}, you are successfully logged in!", "success")
+            session['user_id'] = user.user_id
+            session['user_name'] = user.first_name
             return redirect("/index")
         else:
             flash("Sorry, something went wrong", "danger")
     return render_template("login.html", title="Login", form=form, login=True)
+
+
+@app.route("/logout")
+def logout():
+    session['user_id'] = False
+    session.pop('user_name', None)
+    return redirect(url_for('index'))
 
 
 @app.route("/courses/")
@@ -52,6 +63,8 @@ def courses(term=None):
 
 @app.route("/register", methods=['POST', 'GET'])
 def register():
+    if session.get('user_name'):
+        return redirect(url_for('index'))
     form = RegisterForm()
     if form.validate_on_submit():
         user_id = User.objects.count()
@@ -71,9 +84,13 @@ def register():
 
 @app.route("/enrollment", methods=["GET", "POST"])
 def enrollment():
+    if not session.get('user_name'):
+        return redirect(url_for('login'))
+
     courseID = request.form.get('courseID')
     course_title = request.form.get('title')
-    user_id = 2
+    user_id = session.get('user_id')
+
     if courseID:
         if Enrollment.objects(user_id=user_id, courseID=courseID):
             flash(f"Oops! You are already registered in this course {course_title}!", "danger")
@@ -86,7 +103,7 @@ def enrollment():
             {
                     '$lookup': {
                             'from': 'enrollment',
-                            'localField': 'id',
+                            'localField': 'user_id',
                             'foreignField': 'user_id',
                             'as': 'r1'
                     }
@@ -110,7 +127,7 @@ def enrollment():
                     }
             }, {
                     '$match': {
-                            'id': user_id
+                            'user_id': user_id
                     }
             }, {
                     '$sort': {

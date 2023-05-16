@@ -10,15 +10,24 @@
             </li>
             <li class="nav-item"><a class="nav-link {% if courses %}active{% endif %}" href="{{ url_for('courses') }}">Classes</a>
             </li>
+
+            {% if not session['user_name'] %}
             <li class="nav-item"><a class="nav-link {% if register %}active{% endif %}"
                                     href="{{ url_for('register') }}">Register</a>
+                {% endif %}
+
             </li>
             <li class="nav-item"><a class="nav-link {% if enrollment %}active{% endif %}"
                                     href="{{ url_for('enrollment') }}">Enrollment</a>
             </li>
+            {% if not session['user_name'] %}
             <li class="nav-item"><a class="nav-link {% if login %}active{% endif %}"
                                     href="{{ url_for('login') }}">Login</a>
             </li>
+            {% else %}
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+            </li>
+            {% endif %}
         </ul>
     </nav>
     <hr style="clear:both">
